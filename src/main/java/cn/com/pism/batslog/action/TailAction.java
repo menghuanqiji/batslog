@@ -20,10 +20,12 @@ import java.util.Objects;
  */
 public class TailAction extends AnAction {
 
+    private Runnable runnable;
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
+        BatsLogUtil.SOURCE_SQL_LIST_MAP.remove(project);
         if (project != null) {
             Boolean tailStatus = BatsLogUtil.getTailStatus(project);
             BatsLogUtil.TAIL_STATUS.put(project, !tailStatus);
@@ -31,6 +33,8 @@ public class TailAction extends AnAction {
             String tipMsg = tailStatus ? BatsLogBundle.message("SqlListenerHasStop") : BatsLogBundle.message("SqlListenerHasStarted");
             consoleView.print(tipMsg, ConsoleViewContentType.LOG_DEBUG_OUTPUT);
             consoleView.installPopupHandler(consoleView.getActionToolbar().getActions());
+
+            runnable.run();
         }
     }
 
@@ -62,8 +66,10 @@ public class TailAction extends AnAction {
      * @param icon        Action's icon
      */
     public TailAction(@Nullable String text, @Nullable String description,
-                      @Nullable Icon icon) {
+                      @Nullable Icon icon,
+                      Runnable runnable) {
         super(text, description, icon);
+        this.runnable = runnable;
     }
 
 

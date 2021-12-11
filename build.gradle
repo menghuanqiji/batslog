@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '0.5.0'
+    id 'org.jetbrains.intellij' version '0.7.0'
 }
 
 group 'cn.com.pism'
-version '21.03.14.0107-Release'
+version '21.08.17.1659-RE'
 
 
 java {
@@ -54,6 +54,75 @@ patchPluginXml {
 <h1>$version</h1>
 
 <ul>
+<li>ADD Toolbar dynamic correction according to position</li>
+<li>ADD Add dynamic color configuration, and color schemes can be shared quickly</li>
+<li>OPT Change the default non enabled color configuration to the default enabled color configuration</li>
+<li>OPT Optimization algorithm</li>
+<li>OPT Formatting algorithm adapts #14</li>
+<li>OPT Formatting algorithm adapts line feed parameters #18</li>
+<li>OPT Modify the default color scheme</li>
+<li>OPT Optimize color configuration interface</li>
+
+<li>ADD 工具栏根据位置动态修正</li>
+<li>ADD 添加颜色动态配置，配色方案可以快速分享</li>
+<li>OPT 将默认不启用颜色配置改为默认启用颜色配置</li>
+<li>OPT 算法优化</li>
+<li>OPT 格式化算法适配 #14</li>
+<li>OPT 格式化算法适配换行参数 #18</li>
+<li>OPT 修改默认的配色方案</li>
+<li>OPT 优化颜色配置UI</li>
+
+</ul>
+</div>
+
+
+<h1>21.08.08.2003-TE</h1>
+
+<ul>
+<li>OPT 将默认不启用颜色配置改为默认启用颜色配置</li>
+<li>OPT 算法优化</li>
+<li>OPT 格式化算法适配 #14</li>
+<li>OPT 格式化算法适配换行参数 #18</li>
+<li>OPT 修改默认的配色方案</li>
+<li>OPT 优化颜色配置UI</li>
+<li>ADD 添加颜色动态配置，配色方案可以快速分享</li>
+</ul>
+
+
+<h1>21.07.04.1838-RE</h1>
+
+<ul>
+<li>ADD #15 print colored SQL</li>
+<li>ADD #15 SQL color configuration</li>
+<li>ADD add serial number</li>
+<li>OPT ui beautification</li>
+<li>ADD #15 打印有颜色的SQL</li>
+<li>ADD #15 SQL颜色配置</li>
+<li>ADD 添加序号</li>
+<li>OPT UI美化</li>
+</ul>
+
+
+<h1>21.05.27.2253-RE</h1>
+
+<ul>
+<li>FIX some bugs</li>
+<li>ADD One click beautification configuration</li>
+<li>ADD Print at the end of SQL [;] semicolon</li>
+<li>ADD Improve log format compatibility</li>
+<li>OPT Some copywriting</li>
+<li>OPT the display name of the toolWindow to reduce space consumption</li>
+<li>FIX 一些bug</li>
+<li>ADD 一键美化配置</li>
+<li>ADD SQL末尾打印[;]分号</li>
+<li>ADD 提高日志格式化兼容性</li>
+<li>OPT 一些文案</li>
+<li>OPT 工具栏显示名称，减少空间占用</li>
+</ul>
+
+<h1>21.03.14.0107-Release</h1>
+
+<ul>
 <li>Fix some bugs</li>
 <li>ADD SQL desensitization configuration</li>
 <li>ADD SQL beautification configuration</li>
@@ -63,8 +132,6 @@ patchPluginXml {
 <li>新增 SQL美化配置</li>
 <li>新增 SQL大小写转换配置</li>
 </ul>
-</div>
-
 
 <h1>21.01.13.2217-Release</h1>
 

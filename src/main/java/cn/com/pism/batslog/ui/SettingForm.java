@@ -1,9 +1,12 @@
 package cn.com.pism.batslog.ui;
 
+import cn.com.pism.batslog.BatsLogBundle;
 import cn.com.pism.batslog.action.RevertAction;
 import cn.com.pism.batslog.constants.BatsLogConstant;
 import cn.com.pism.batslog.enums.DbType;
 import cn.com.pism.batslog.settings.BatsLogSettingState;
+import cn.com.pism.batslog.model.RgbColor;
+import cn.com.pism.batslog.util.BatsLogUtil;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionToolbar;
@@ -11,10 +14,9 @@ import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.actionSystem.impl.ActionButton;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.ColorChooser;
+import com.intellij.ui.components.OnOffButton;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.ui.JBUI;
 import icons.BatsLogIcons;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -26,12 +28,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
 
-import static cn.com.pism.batslog.constants.BatsLogConstant.*;
+import static cn.com.pism.batslog.constants.BatsLogConstant.PARAMS_PREFIX;
+import static cn.com.pism.batslog.constants.BatsLogConstant.SQL_PREFIX;
 
 /**
  * @author wangyihuai
@@ -50,10 +50,11 @@ public class SettingForm {
     private JTextField paramsPrefix;
     private JPanel revertSqlPanel;
     private JPanel revertParamsPanel;
-    private JCheckBox desensitize;
-    private JCheckBox prettyFormat;
-    private JCheckBox parameterized;
-    private JCheckBox toUpperCase;
+    private JButton configButton;
+    private OnOffButton desensitize;
+    private OnOffButton prettyFormat;
+    private OnOffButton parameterized;
+    private OnOffButton toUpperCase;
 
     private BatsLogSettingState service;
 
@@ -62,6 +63,85 @@ public class SettingForm {
         this.project = project;
         this.service = ServiceManager.getService(project, BatsLogSettingState.class);
 
+        //初始化数据库选择
+        initDbTypeBox();
+        //初始化关键字颜色选择按钮
+        initKeyWordColorButton(project);
+
+        String sqlPrefixStr = service.getSqlPrefix();
+        if (StringUtils.isBlank(sqlPrefixStr)) {
+            sqlPrefixStr = BatsLogConstant.SQL_PREFIX;
+        }
+        sqlPrefix.setText(sqlPrefixStr);
+
+        String paramsPrefixStr = service.getParamsPrefix();
+        if (StringUtils.isBlank(paramsPrefixStr)) {
+            paramsPrefixStr = BatsLogConstant.PARAMS_PREFIX;
+        }
+        paramsPrefix.setText(paramsPrefixStr);
+        addListen(project);
+        RevertAction revertSqlAction = new RevertAction(AllIcons.Actions.Rollback, SQL_PREFIX, sqlPrefix);
+        revertSqlPanel.add(new ActionButton(revertSqlAction, new Presentation(), ActionPlaces.UNKNOWN, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE));
+        RevertAction revertParamsAction = new RevertAction(AllIcons.Actions.Rollback, PARAMS_PREFIX, paramsPrefix);
+        revertParamsPanel.add(new ActionButton(revertParamsAction, new Presentation(), ActionPlaces.UNKNOWN, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE));
+
+        initFormatConfig();
+
+        configButton.addActionListener(e -> ConsoleColorConfigDialog.show(project));
+    }
+
+    private void initFormatConfig() {
+        desensitize.setSelected(service.getDesensitize());
+        setOnOffText(desensitize);
+        parameterized.setSelected(service.getParameterized());
+        setOnOffText(parameterized);
+        prettyFormat.setSelected(service.getPrettyFormat());
+        setOnOffText(prettyFormat);
+        BatsLogUtil.PRETTY_FORMAT = prettyFormat;
+        Boolean toUpperCase = service.getToUpperCase();
+        if (toUpperCase != null) {
+            this.toUpperCase.setSelected(toUpperCase);
+        } else {
+            this.toUpperCase.setSelected(false);
+        }
+        setOnOffText(this.toUpperCase);
+    }
+
+    private void setOnOffText(OnOffButton offButton) {
+        offButton.setOffText(BatsLogBundle.message("off"));
+        offButton.setOnText(BatsLogBundle.message("on"));
+    }
+
+    /**
+     * <p>
+     * 初始化关键字颜色选择按钮
+     * </p>
+     *
+     * @param project : 项目
+     * @author PerccyKing
+     * @date 2021/06/26 下午 03:40
+     */
+    private void initKeyWordColorButton(Project project) {
+        ColorButton colorButton = new ColorButton(project, BatsLogUtil.toColor(service.getKeyWordDefCol()), 16, 16, choseColor -> {
+            service.setKeyWordDefCol(new RgbColor(choseColor.getRed(), choseColor.getGreen(), choseColor.getBlue()));
+        });
+        GridLayoutManager layout = (GridLayoutManager) keyWordsPanel.getLayout();
+        GridConstraints constraintsForComponent = layout.getConstraintsForComponent(keyWord);
+        layout.removeLayoutComponent(keyWord);
+        layout.addLayoutComponent(colorButton, constraintsForComponent);
+        keyWordsPanel.add(colorButton, constraintsForComponent);
+        keyWordsPanel.revalidate();
+    }
+
+    /**
+     * <p>
+     * 初始化数据库选择
+     * </p>
+     *
+     * @author PerccyKing
+     * @date 2021/06/26 下午 03:39
+     */
+    private void initDbTypeBox() {
         List<DbType> radioButtons = DbType.getRadioButtons();
         radioButtons.forEach(rb -> {
             if (!DbType.NONE.equals(rb)) {
@@ -81,40 +161,6 @@ public class SettingForm {
         });
         DbTypeRender<DbType> dbTypeRender = new DbTypeRender<>();
         dbTypeBox.setRenderer(dbTypeRender);
-        ColorButton colorButton = new ColorButton(project, service.getKeyWordDefCol());
-        GridLayoutManager layout = (GridLayoutManager) keyWordsPanel.getLayout();
-        GridConstraints constraintsForComponent = layout.getConstraintsForComponent(keyWord);
-        layout.removeLayoutComponent(keyWord);
-        layout.addLayoutComponent(colorButton, constraintsForComponent);
-        keyWordsPanel.add(colorButton, constraintsForComponent);
-        keyWordsPanel.revalidate();
-
-        String sqlPrefixStr = service.getSqlPrefix();
-        if (StringUtils.isBlank(sqlPrefixStr)) {
-            sqlPrefixStr = BatsLogConstant.SQL_PREFIX;
-        }
-        sqlPrefix.setText(sqlPrefixStr);
-
-        String paramsPrefixStr = service.getParamsPrefix();
-        if (StringUtils.isBlank(paramsPrefixStr)) {
-            paramsPrefixStr = BatsLogConstant.PARAMS_PREFIX;
-        }
-        paramsPrefix.setText(paramsPrefixStr);
-        addListen(project);
-        RevertAction revertSqlAction = new RevertAction(AllIcons.Actions.Rollback, SQL_PREFIX, sqlPrefix);
-        revertSqlPanel.add(new ActionButton(revertSqlAction, new Presentation(), ActionPlaces.UNKNOWN, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE));
-        RevertAction revertParamsAction = new RevertAction(AllIcons.Actions.Rollback, PARAMS_PREFIX, paramsPrefix);
-        revertParamsPanel.add(new ActionButton(revertParamsAction, new Presentation(), ActionPlaces.UNKNOWN, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE));
-
-        desensitize.setSelected(service.getDesensitize());
-        parameterized.setSelected(service.getParameterized());
-        prettyFormat.setSelected(service.getPrettyFormat());
-        Boolean toUpperCase = service.getToUpperCase();
-        if (toUpperCase != null) {
-            this.toUpperCase.setSelected(toUpperCase);
-        } else {
-            this.toUpperCase.setSelected(false);
-        }
     }
 
     private void addListen(Project project) {
@@ -190,86 +236,6 @@ public class SettingForm {
     }
 
 
-    public static class ColorButton extends JButton {
-
-        private Color myColor;
-
-        private BatsLogSettingState service;
-
-        @Override
-        protected void init(String text, Icon icon) {
-            super.init(text, icon);
-        }
-
-        ColorButton(Project project, Color color) {
-            this.service = ServiceManager.getService(project, BatsLogSettingState.class);
-            if (color != null) {
-                this.myColor = color;
-            } else {
-                this.myColor = KEY_WORD_DEF_COL;
-                service.setKeyWordDefCol(KEY_WORD_DEF_COL);
-            }
-            buttonInit(project, color);
-        }
-
-        ColorButton() {
-            buttonInit(null, null);
-        }
-
-        private void buttonInit(Project project, Color color) {
-            setMargin(JBUI.emptyInsets());
-            setFocusable(false);
-            setDefaultCapable(false);
-            setFocusable(false);
-            if (color != null) {
-                myColor = color;
-            }
-            MouseAdapter adapter = new MouseAdapter() {
-                /**
-                 * {@inheritDoc}
-                 *
-                 * @param e
-                 */
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    Color color = ColorChooser.chooseColor(new JPanel(), "选择颜色", myColor);
-                    if (color != null) {
-                        myColor = color;
-                        service.setKeyWordDefCol(color);
-                    }
-                    super.mouseClicked(e);
-                }
-            };
-            addMouseListener(adapter);
-        }
-
-
-        @Override
-        public void paint(Graphics g) {
-            final Color color = g.getColor();
-            g.setColor(myColor);
-            g.fillRect(0, 0, 12, 12);
-            g.setColor(color);
-        }
-
-        @Override
-        public Dimension getMinimumSize() {
-            return getPreferredSize();
-        }
-
-        @Override
-        public Dimension getMaximumSize() {
-            return getPreferredSize();
-        }
-
-        @Override
-        public Dimension getPreferredSize() {
-            return new Dimension(12, 12);
-        }
-
-
-    }
-
     protected static class DbTypeRender<T extends DbType> extends JLabel implements ListCellRenderer<T> {
 
 
@@ -285,4 +251,5 @@ public class SettingForm {
             return this;
         }
     }
+
 }

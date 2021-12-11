@@ -1,13 +1,16 @@
 package cn.com.pism.batslog.util;
 
+import cn.com.pism.batslog.model.RgbColor;
 import com.intellij.execution.impl.ConsoleViewImpl;
+import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ex.ToolWindowEx;
+import com.intellij.ui.JBColor;
+import com.intellij.ui.components.OnOffButton;
 import org.apache.commons.collections.CollectionUtils;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -25,19 +28,22 @@ public class BatsLogUtil {
     public static ToolWindowEx TOOL_WINDOW;
     public static Map<Project, Boolean> TAIL_STATUS = new HashMap<>();
     public static Map<Project, ConsoleViewImpl> CONSOLE_VIEW_MAP = new HashMap<>();
-    public static JScrollBar PANE_BAR;
+    public static OnOffButton PRETTY_FORMAT;
 
     public static Map<Project, List<String>> SOURCE_SQL_LIST_MAP = new HashMap<>();
 
     public static Map<Project, List<String>> SQL_CACHE = new HashMap<>();
 
+    public static Map<String, ConsoleViewContentType> KEY_COLOR_MAP = new HashMap<>();
+
+    public static int NUM = 0;
 
     public static void copySqlToClipboard(AnActionEvent e, String text) {
 
-        SqlFormatUtils.format(text, e.getProject(), Boolean.FALSE);
+        SqlFormatUtil.format(text, e.getProject(), Boolean.FALSE);
         List<String> sqlCache = BatsLogUtil.SQL_CACHE.get(e.getProject());
         if (CollectionUtils.isNotEmpty(sqlCache)) {
-            String cache = String.join(";\n\n", sqlCache);
+            String cache = String.join("\n\n", sqlCache);
             //复制到剪贴板
             copyToClipboard(cache);
         }
@@ -54,5 +60,10 @@ public class BatsLogUtil {
         Boolean tailStatus = TAIL_STATUS.get(project);
         tailStatus = tailStatus == null ? Boolean.FALSE : tailStatus;
         return tailStatus;
+    }
+
+    public static Color toColor(RgbColor rgbColor) {
+        return new JBColor(new Color(rgbColor.getR(), rgbColor.getG(), rgbColor.getB()),
+                new Color(rgbColor.getR(), rgbColor.getG(), rgbColor.getB()));
     }
 }

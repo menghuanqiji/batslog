@@ -1,17 +1,14 @@
 package cn.com.pism.batslog.ui;
 
 import cn.com.pism.batslog.BatsLogBundle;
-import cn.com.pism.batslog.util.BatsLogUtil;
-import cn.com.pism.batslog.util.Editors;
-import cn.com.pism.batslog.util.SqlFormatUtils;
-import cn.com.pism.batslog.util.StringUtil;
+import cn.com.pism.batslog.util.*;
 import com.intellij.execution.impl.ConsoleViewImpl;
 import com.intellij.icons.AllIcons;
-import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -101,14 +98,14 @@ public class FormatWindow extends DialogWrapper {
 
     private void format(@Nullable Project project, String text, boolean b, ConsoleViewImpl consoleView) {
         if (StringUtils.isNotBlank(text)) {
-            SqlFormatUtils.format(text, project, b, consoleView);
+            SqlFormatUtil.format(text, project, b, consoleView);
         }
     }
 
     private void initForm(@Nullable Project project) {
         //创建一个编辑器
         Project defaultProject = ProjectManager.getInstance().getDefaultProject();
-        Editor logEditor = Editors.createSourceEditor(project, Language.findLanguageByID("TEXT"), "", false);
+        Editor logEditor = Editors.createSourceEditor(project, PlainTextLanguage.INSTANCE, "", false);
         this.myEditor = logEditor;
 
         //添加一个工具栏
